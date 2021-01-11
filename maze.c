@@ -15,6 +15,7 @@ void EnemyTimer2(int);
 void Keyboard(unsigned char, int, int);
 void SpecialKey(int, int, int);
 int isMovable(int, int, int);
+void CharacterMove(int *, int *, int);
 void clear();
 void makeMap();
 void PutSprite(int, int, int, pngInfo *);
@@ -47,12 +48,16 @@ pngInfo info_enemy1; // 構造体 画像の細かい情報(表16.1)
 GLuint img_enemy2; // unsigned int 識別番号
 pngInfo info_enemy2; // 構造体 画像の細かい情報(表16.1)
 
-int iCount = 0;
-int jCount = 0;
 int gameflag = 0;
 
 #define MAPX 11
 #define MAPY 10
+
+// direction 上=0,右=1,下=2,左=3
+#define UP 0
+#define DOWN 2
+#define LEFT 3
+#define RIGHT 1
 
 
 // p169
@@ -74,7 +79,7 @@ int main(int argc, char **argv) {
     srandom(12345);
     glutInit(&argc, argv);
     glutInitWindowSize(320, 320);
-    glutCreateWindow("gamemap4");
+    glutCreateWindow("GoDownMaze");
     glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA);
     glClearColor(0.0, 0.0, 1.0, 1.0);
 
@@ -120,59 +125,66 @@ int main(int argc, char **argv) {
 }
 
 
-//
+
+// 移動時に移動できるかを判定し移動
+void CharacterMove(int *x, int *y, int direction) {
+    int return_val;
+
+    switch (direction) {
+    case UP: // 上へ進む
+        return_val = isMovable(*x, *y, UP);
+        if (return_val) { // return_valが1のとき実行
+            *y -= 8;
+        }
+        break;
+    case DOWN: // 下へ
+        return_val = isMovable(*x, *y, DOWN);
+        if (return_val) {
+            *y += 8;
+        }
+        break;
+    case LEFT: // 左へ
+        return_val = isMovable(*x, *y, LEFT);
+        if (return_val) {
+            *x -= 8;
+        }
+        break;
+    case RIGHT: // 右へ
+        return_val = isMovable(*x, *y, RIGHT);
+        if (return_val) {
+            *x += 8;
+        }
+        break;
+    default: // なにもしない
+        break;
+    }
+}
+
+
 //  タイマー割り込みで画面を描画し直す
-//
-void Timer(int t)
-{
+void Timer(int t) {
     glutPostRedisplay();
     glutTimerFunc(100, Timer, 0);
 }
 
 //  タイマー割り込みで画面を描画し直す(敵1用)
-void EnemyTimer1(int t)
-{   
-    int return_val;
+void EnemyTimer1(int t) {   
     int r;
     r = rand() % 10;
     //printf("r:%d\n", r);
     
     switch (r) {
-        case 0:
-            return_val = isMovable(enemy1X, enemy1Y, 0);
-            //printf("上:%d\n", return_val);
-            if (return_val)
-            { // return_valが1のとき実行
-                enemy1Y -= 8;
-                //puts("上");
-            }
+        case 0: // 上
+            CharacterMove(&enemy1X, &enemy1Y, UP);
             break;
-        case 1:
-            return_val = isMovable(enemy1X, enemy1Y, 2);
-            //printf("下:%d\n", return_val);
-            if (return_val)
-            { // return_valが1のとき実行
-                enemy1Y += 8;
-                //puts("下");
-            }
+        case 1: // 下
+            CharacterMove(&enemy1X, &enemy1Y, DOWN);
             break;
-        case 2:
-            return_val = isMovable(enemy1X, enemy1Y, 3);
-            //printf("左:%d\n", return_val);
-            if (return_val)
-            { // return_valが1のとき実行
-                enemy1X -= 8;
-                //puts("左");
-            }
+        case 2: // 左
+            CharacterMove(&enemy1X, &enemy1Y, LEFT);
             break;
-        case 3:
-            return_val = isMovable(enemy1X, enemy1Y, 1);
-            //printf("右:%d\n", return_val);
-            if (return_val)
-            { // return_valが1のとき実行
-                enemy1X += 8;
-                //puts("左");
-            }
+        case 3: // 右
+            CharacterMove(&enemy1X, &enemy1Y, RIGHT);
             break;
         default:
             break;
@@ -224,45 +236,23 @@ void EnemyTimer1(int t)
 }
 
 //  タイマー割り込みで画面を描画し直す(敵2用)
-void EnemyTimer2(int t)
-{   
-    int return_val;
+void EnemyTimer2(int t) {
     int r;
     r = rand() % 10;
     //printf("r:%d\n", r);
     
     switch (r) {
-        case 0:
-            return_val = isMovable(enemy2X, enemy2Y, 0);
-            if (return_val)
-            { // return_valが1のとき実行
-                enemy2Y -= 8;
-                //puts("上");
-            }
+        case 0: // 上
+            CharacterMove(&enemy2X, &enemy2Y, UP);
             break;
-        case 1:
-            return_val = isMovable(enemy2X, enemy2Y, 2);
-            if (return_val)
-            { // return_valが1のとき実行
-                enemy2Y += 8;
-                //puts("下");
-            }
+        case 1: // 下
+            CharacterMove(&enemy2X, &enemy2Y, DOWN);
             break;
-        case 2:
-            return_val = isMovable(enemy2X, enemy2Y, 3);
-            if (return_val)
-            { // return_valが1のとき実行
-                enemy2X -= 8;
-                //puts("左");
-            }
+        case 2: // 左
+            CharacterMove(&enemy2X, &enemy2Y, LEFT);
             break;
-        case 3:
-            return_val = isMovable(enemy2X, enemy2Y, 1);
-            if (return_val)
-            { // return_valが1のとき実行
-                enemy2X += 8;
-                //puts("左");
-            }
+        case 3: // 右
+            CharacterMove(&enemy2X, &enemy2Y, RIGHT);
             break;
         default:
             break;
@@ -286,8 +276,7 @@ void EnemyTimer2(int t)
 
 
 //  ウィンドウのサイズ変更が発生したときに座標系を再設定する関数
-void Reshape(int w, int h)
-{
+void Reshape(int w, int h) {
     glViewport(0, 0, w, h);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -298,8 +287,7 @@ void Reshape(int w, int h)
 
 
 //  ウィンドウの表示内容を更新する
-void Display(void)
-{
+void Display(void) {
     int x, y = 0;  //  PNG画像を置く座標
     int i, j;
 
@@ -335,63 +323,36 @@ void Display(void)
     glFlush();
 }
 
+
 // キー入力の処理
 void Keyboard(unsigned char key, int x, int y) {
     if ((key == 'q') || (key == 27)) {
         puts("終了");
         exit(0);
     }
-    if (key == 'i') {
-        iCount++;
-    }
-    if (key == 'j') {
-        jCount++;
-    }
 }
 
 // p165 特殊キー
 // direction 上=0,右=1,下=2,左=3
 void SpecialKey(int key, int x, int y) {
-    int return_val;
-    switch (key)
-    {
+    switch (key) {
     case GLUT_KEY_UP:
-        return_val = isMovable(characterX, characterY, 0);
-        if (return_val)
-        { // return_valが1のとき実行
-            characterY -= 8;
-            //puts("上");
-        }
+        CharacterMove(&characterX, &characterY, UP);
         break;
     case GLUT_KEY_DOWN:
-        return_val = isMovable(characterX, characterY, 2);
-        if (return_val)
-        { // return_valが1のとき実行
-            characterY += 8;
-            //puts("下");
-        }
+        CharacterMove(&characterX, &characterY, DOWN);
         break;
     case GLUT_KEY_LEFT:
-        return_val = isMovable(characterX, characterY, 3);
-        if (return_val)
-        { // return_valが1のとき実行
-            characterX -= 8;
-            //puts("左");
-        }
+        CharacterMove(&characterX, &characterY, LEFT);
         break;
     case GLUT_KEY_RIGHT:
-        return_val = isMovable(characterX, characterY, 1);
-        if (return_val)
-        { // return_valが1のとき実行
-            characterX += 8;
-            //puts("右");
-        }
+        CharacterMove(&characterX, &characterY, RIGHT);
         break;
     default:
         break;
-        }
+    }
+
     glutPostRedisplay(); // ディスプレイを更新
-    
 }
 
 // direction 上=0,右=1,下=2,左=3
@@ -467,6 +428,7 @@ void clear() {
     //puts("ahoaho");
 }
 
+// マップ作成(穴掘り法)
 void makeMap() {
     int i, j;
     int r;
@@ -474,25 +436,27 @@ void makeMap() {
     characterX = 32;
     characterY = 32;
 
-    enemy1X = 256;
-    enemy1Y = 32;
-    enemy2X = 256;
-    enemy2Y = 256;
-
-    /*map[10][11] = {
-        "AAAAAAAAAA",
-        "ABABBBBBBA",
-        "ABABAABBBA",
-        "ABABBBBBBA",
-        "ABBBAAAAAA",
-        "ABABBBBBBA",
-        "AAABBAABBA",
-        "ABABBAAABA",
-        "ABABBABBBA",
-        "AAAAAAAAAA",
-    };*/
-
+    // すべてを壁として初期化
     for (i = 0; i < MAPX; i++) {
+        for (j = 0; j < MAPY; j++) {
+            map[i][j] = 'A';   
+        }
+    }
+
+    
+
+
+
+
+
+
+
+    //enemy1X = 256;
+    //enemy1Y = 32;
+    //enemy2X = 256;
+    //enemy2Y = 256;
+
+    /*for (i = 0; i < MAPX; i++) {
         for (j = 0; j < MAPY; j++) {
             r = rand() % 2;
             if (i == 0 || i == 9 || j == 0 || j == 9) {
@@ -508,8 +472,8 @@ void makeMap() {
             
         }
     }
-    puts("マップ作成完了");
-    /*map[10][11] = {
+    
+    map[10][11] = {
         "AAAAAAAAAA",
         "ABBBBBBBBA",
         "ABBBAABBBA",
@@ -521,11 +485,12 @@ void makeMap() {
         "ABBBBBBBBA",
         "AAAAAAAAAA",
     };*/
+
+    puts("マップ作成完了");
 }
 
 //  num番のPNG画像を座標(x,y)に表示する
-void PutSprite(int num, int x, int y, pngInfo *info_map)
-{
+void PutSprite(int num, int x, int y, pngInfo *info_map) {
     int w, h;  //  テクスチャの幅と高さ
 
 
