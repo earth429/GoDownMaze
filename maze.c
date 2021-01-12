@@ -50,8 +50,11 @@ pngInfo info_enemy2; // 構造体 画像の細かい情報(表16.1)
 
 int gameflag = 0;
 
-#define MAPX 11
-#define MAPY 10
+#define MAPWIDTH 12
+#define MAPHEIGHT 11
+
+#define WALL 0
+#define ROAD 1
 
 // direction 上=0,右=1,下=2,左=3
 #define UP 0
@@ -59,9 +62,9 @@ int gameflag = 0;
 #define LEFT 3
 #define RIGHT 1
 
-
+int map[MAPHEIGHT][MAPWIDTH] = {};
 // p169
-char map[10][11] = {
+/*char map[MAPHEIGHT][MAPWIDTH] = {
     "AAAAAAAAAA",
     "ABBBBBBBBA",
     "ABBBAABBBA",
@@ -72,13 +75,13 @@ char map[10][11] = {
     "ABBBBAAABA",
     "ABBBBBBBBA",
     "AAAAAAAAAA",
-};
+};*/
 
 int main(int argc, char **argv) {
     //  一般的な準備
     srandom(12345);
     glutInit(&argc, argv);
-    glutInitWindowSize(320, 320);
+    glutInitWindowSize((MAPWIDTH - 1) * 32, MAPHEIGHT * 32); //320
     glutCreateWindow("GoDownMaze");
     glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA);
     glClearColor(0.0, 0.0, 1.0, 1.0);
@@ -93,20 +96,15 @@ int main(int argc, char **argv) {
 
     //  PNG画像の読み込み
 
-    img_mapA = pngBind("./png/mapparts1.png", PNG_NOMIPMAP, PNG_ALPHA,
-                         &info_mapA, GL_CLAMP, GL_NEAREST, GL_NEAREST);
+    img_mapA = pngBind("./png/mapparts1.png", PNG_NOMIPMAP, PNG_ALPHA, &info_mapA, GL_CLAMP, GL_NEAREST, GL_NEAREST);
 
-    img_mapB = pngBind("./png/mapparts2.png", PNG_NOMIPMAP, PNG_ALPHA,
-                         &info_mapB, GL_CLAMP, GL_NEAREST, GL_NEAREST);
+    img_mapB = pngBind("./png/mapparts2.png", PNG_NOMIPMAP, PNG_ALPHA, &info_mapB, GL_CLAMP, GL_NEAREST, GL_NEAREST);
 
-    img_character = pngBind("./png/character.png", PNG_NOMIPMAP, PNG_ALPHA,
-                         &info_character, GL_CLAMP, GL_NEAREST, GL_NEAREST);
+    img_character = pngBind("./png/character.png", PNG_NOMIPMAP, PNG_ALPHA, &info_character, GL_CLAMP, GL_NEAREST, GL_NEAREST);
 
-    img_enemy1 = pngBind("./png/enemy1.png", PNG_NOMIPMAP, PNG_ALPHA,
-                         &info_enemy1, GL_CLAMP, GL_NEAREST, GL_NEAREST);
+    img_enemy1 = pngBind("./png/enemy1.png", PNG_NOMIPMAP, PNG_ALPHA, &info_enemy1, GL_CLAMP, GL_NEAREST, GL_NEAREST);
 
-    img_enemy2 = pngBind("./png/enemy2.png", PNG_NOMIPMAP, PNG_ALPHA,
-                         &info_enemy2, GL_CLAMP, GL_NEAREST, GL_NEAREST);
+    img_enemy2 = pngBind("./png/enemy2.png", PNG_NOMIPMAP, PNG_ALPHA, &info_enemy2, GL_CLAMP, GL_NEAREST, GL_NEAREST);
 
 
     //  コールバック関数の登録
@@ -297,14 +295,15 @@ void Display(void) {
         makeMap();
         gameflag++;
     }
+    makeMap();
 
-    for (i = 0; i < 10; i++) {
-        for (j = 0; j < 10; j++) {
+    for (i = 0; i < MAPHEIGHT; i++) {
+        for (j = 0; j < MAPWIDTH - 1; j++) {
             x = 32 * j;
             y = 32 * i;
-            if (map[i][j] == 'A') {
+            if (map[i][j] == WALL) {
                 PutSprite(img_mapA, x, y, &info_mapA);
-            } else if(map[i][j] == 'B'){
+            } else if(map[i][j] == ROAD){
                 PutSprite(img_mapB, x, y, &info_mapB);
             }
         }
@@ -363,11 +362,11 @@ int isMovable(int x, int y, int direction) {
             cx = x / 32;
             cy = (y - 1) / 32;
             if (x % 32 == 0) { // キャラクターがマップパーツとぴったり重なる
-                if (map[cy][cx] == 'A') { // Aは壁
+                if (map[cy][cx] == WALL) { // Aは壁
                     return 0;
                 }
             } else {
-                if (map[cy][cx] == 'A' || map[cy][cx + 1] == 'A') { // Aは壁
+                if (map[cy][cx] == WALL || map[cy][cx + 1] == WALL) { // Aは壁
                     return 0;
                 }
             }
@@ -376,11 +375,11 @@ int isMovable(int x, int y, int direction) {
             cx = x / 32;
             cy = y / 32;
             if (y % 32 == 0) { // キャラクターがマップパーツとぴったり重なる
-                if (map[cy][cx + 1] == 'A') { // Aは壁
+                if (map[cy][cx + 1] == WALL) { // Aは壁
                     return 0;
                 }
             } else {
-                if (map[cy][cx + 1] == 'A' || map[cy + 1][cx + 1] == 'A') { // Aは壁
+                if (map[cy][cx + 1] == WALL || map[cy + 1][cx + 1] == WALL) { // Aは壁
                     return 0;
                 }
             }
@@ -389,11 +388,11 @@ int isMovable(int x, int y, int direction) {
             cx = x / 32;
             cy = y / 32;
             if (x % 32 == 0) { // キャラクターがマップパーツとぴったり重なる
-                if (map[cy + 1][cx] == 'A') { // Aは壁
+                if (map[cy + 1][cx] == WALL) { // Aは壁
                     return 0;
                 }
             } else {
-                if (map[cy + 1][cx] == 'A' || map[cy + 1][cx + 1] == 'A') { // Aは壁
+                if (map[cy + 1][cx] == WALL || map[cy + 1][cx + 1] == WALL) { // Aは壁
                     return 0;
                 }
             }
@@ -402,11 +401,11 @@ int isMovable(int x, int y, int direction) {
             cx = (x - 1) / 32;
             cy = y / 32;
             if (y % 32 == 0) { // キャラクターがマップパーツとぴったり重なる
-                if (map[cy][cx] == 'A') { // Aは壁
+                if (map[cy][cx] == WALL) { // Aは壁
                     return 0;
                 }
             } else {
-                if (map[cy][cx] == 'A' || map[cy + 1][cx] == 'A') { // Aは壁
+                if (map[cy][cx] == WALL || map[cy + 1][cx] == WALL) { // Aは壁
                     return 0;
                 }
             }
@@ -431,18 +430,121 @@ void clear() {
 // マップ作成(穴掘り法)
 void makeMap() {
     int i, j;
+    int x = 0;
+    int y = 0;
+    int direction = 10; // 方向以外の数字
     int r;
 
+    // キャラクターの初期位置
     characterX = 32;
     characterY = 32;
 
     // すべてを壁として初期化
-    for (i = 0; i < MAPX; i++) {
-        for (j = 0; j < MAPY; j++) {
-            map[i][j] = 'A';   
+    for (i = 0; i <= MAPHEIGHT; i++) {
+        for (j = 0; j <= MAPWIDTH; j++) {
+            map[i][j] = WALL;   
         }
     }
 
+    // 最初の座標を決定
+    while (1) {
+        r = rand() % (MAPHEIGHT - 3) + 2; // 2から8の範囲の乱数生成
+        if (r % 2 == 0 && x == 0) { // 奇数(配列の添字は偶数)
+            /* -1した値が配列で指定する際の座標 */
+            x = r;
+        } else if (r % 2 == 0 && x != 0) {
+            y = r;
+            break;
+        }
+        
+        //sleep(1);
+    }
+    printf("x:%d, y:%d\n", x, y);
+
+    i = 0;
+    while (1) {
+        r = rand() % 10;
+
+        // 掘る方向をランダムに決める    
+        switch (r) {
+            case 0: // 上
+                direction = UP;
+                break;
+            case 1: // 下
+                direction = DOWN;
+                break;
+            case 2: // 左
+                direction = LEFT;
+                break;
+            case 3: // 右
+                direction = RIGHT;
+                break;
+            default:
+                continue; // 決め直し
+                //break;
+        }
+
+
+        // 決めた向きで掘れるかどうか確認
+        switch (direction) {
+            case UP:
+                // 掘れる
+                if (y - 2 > 0 && map[y - 2][x] == WALL) {
+                    // 掘る
+                    map[y][x] = ROAD;
+                    map[y - 1][x] = ROAD;
+                    map[y - 2][x] = ROAD;
+                    y -= 2;
+                    puts("上");
+                    break;
+                } else {
+                    // とりあえずなにもしない
+                    break;
+                }
+            case DOWN:
+                if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) {
+                    map[y][x] = ROAD;
+                    map[y + 1][x] = ROAD;
+                    map[y + 2][x] = ROAD;
+                    y += 2;
+                    puts("下");
+                    break;
+                } else {
+                    // とりあえずなにもしない
+                    break;
+                }
+            case LEFT:
+                if (x - 2 > 0 && map[y][x - 2] == WALL) {
+                    map[y][x] = ROAD;
+                    map[y][x - 1] = ROAD;
+                    map[y][x - 2] = ROAD;
+                    x -= 2;
+                    puts("左");
+                    break;
+                } else {
+                    // とりあえずなにもしない
+                    break;
+                }
+            case RIGHT: 
+                if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
+                    map[y][x] = ROAD;
+                    map[y][x + 1] = ROAD;
+                    map[y][x + 2] = ROAD;
+                    x += 2;
+                    puts("右");
+                    break;
+                } else {
+                    // とりあえずなにもしない
+                    break;
+                }   
+        }
+        if (i == 20) {
+            break;
+        }
+        i++;
+        //puts("堀ループ");
+    }
+    
     
 
 
@@ -456,8 +558,8 @@ void makeMap() {
     //enemy2X = 256;
     //enemy2Y = 256;
 
-    /*for (i = 0; i < MAPX; i++) {
-        for (j = 0; j < MAPY; j++) {
+    /*for (i = 0; i < MAPWIDTH; i++) {
+        for (j = 0; j < MAPHEIGHT; j++) {
             r = rand() % 2;
             if (i == 0 || i == 9 || j == 0 || j == 9) {
                 map[i][j] = 'A';
@@ -487,6 +589,7 @@ void makeMap() {
     };*/
 
     puts("マップ作成完了");
+    sleep(2);
 }
 
 //  num番のPNG画像を座標(x,y)に表示する
