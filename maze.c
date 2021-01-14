@@ -434,6 +434,22 @@ void makeMap() {
     int y = 0;
     int direction = 10; // 方向以外の数字
     int r;
+    int up, down, left, right;
+    up = 0;
+    down = 0;
+    left = 0;
+    right = 0;
+
+    int beforeX[MAPWIDTH];
+    int beforeY[MAPHEIGHT];
+
+    for (i = 0; i < MAPWIDTH; i++) {
+        beforeX[i] = 0;
+    }
+
+    for (i = 0; i < MAPHEIGHT; i++) {
+        beforeY[i] = 0;
+    }
 
     // キャラクターの初期位置
     characterX = 32;
@@ -448,11 +464,11 @@ void makeMap() {
 
     // 最初の座標を決定
     while (1) {
-        r = rand() % (MAPHEIGHT - 3) + 2; // 2から8の範囲の乱数生成
-        if (r % 2 == 0 && x == 0) { // 奇数(配列の添字は偶数)
+        r = rand() % (MAPHEIGHT - 2) + 1; // 配列の添字で1から9の範囲の乱数生成
+        if (r % 2 == 1 && x == 0) { // 偶数(配列の添字は奇数)
             /* -1した値が配列で指定する際の座標 */
             x = r;
-        } else if (r % 2 == 0 && x != 0) {
+        } else if (r % 2 == 1 && x != 0) {
             y = r;
             break;
         }
@@ -463,7 +479,7 @@ void makeMap() {
 
     i = 0;
     while (1) {
-        r = rand() % 10;
+        r = rand() % 4; // 0～3の乱数生成
 
         // 掘る方向をランダムに決める    
         switch (r) {
@@ -479,9 +495,6 @@ void makeMap() {
             case 3: // 右
                 direction = RIGHT;
                 break;
-            default:
-                continue; // 決め直し
-                //break;
         }
 
 
@@ -494,11 +507,21 @@ void makeMap() {
                     map[y][x] = ROAD;
                     map[y - 1][x] = ROAD;
                     map[y - 2][x] = ROAD;
+                    beforeX[i] = x;
+                    beforeY[i] = y;
                     y -= 2;
+                    i++;
                     puts("上");
                     break;
                 } else {
-                    // とりあえずなにもしない
+                    if (i != 0) {
+                        x = beforeX[i];
+                        y = beforeY[i];
+                    } else {
+                        // なにもしないでもう一度地点を変える
+                        continue;
+                    }
+                    
                     break;
                 }
             case DOWN:
@@ -506,11 +529,20 @@ void makeMap() {
                     map[y][x] = ROAD;
                     map[y + 1][x] = ROAD;
                     map[y + 2][x] = ROAD;
+                    beforeX[i] = x;
+                    beforeY[i] = y;
                     y += 2;
+                    i++;
                     puts("下");
                     break;
                 } else {
-                    // とりあえずなにもしない
+                    if (i != 0) {
+                        x = beforeX[i];
+                        y = beforeY[i];
+                    } else {
+                        // なにもしないでもう一度地点を変える
+                        continue;
+                    }
                     break;
                 }
             case LEFT:
@@ -518,11 +550,20 @@ void makeMap() {
                     map[y][x] = ROAD;
                     map[y][x - 1] = ROAD;
                     map[y][x - 2] = ROAD;
+                    beforeX[i] = x;
+                    beforeY[i] = y;
                     x -= 2;
+                    i++;
                     puts("左");
                     break;
                 } else {
-                    // とりあえずなにもしない
+                    if (i != 0) {
+                        x = beforeX[i];
+                        y = beforeY[i];
+                    } else {
+                        // なにもしないでもう一度地点を変える
+                        continue;
+                    }
                     break;
                 }
             case RIGHT: 
@@ -530,21 +571,32 @@ void makeMap() {
                     map[y][x] = ROAD;
                     map[y][x + 1] = ROAD;
                     map[y][x + 2] = ROAD;
+                    beforeX[i] = x;
+                    beforeY[i] = y;
                     x += 2;
+                    i++;
                     puts("右");
                     break;
                 } else {
-                    // とりあえずなにもしない
+                    if (i != 0) {
+                        x = beforeX[i];
+                        y = beforeY[i];
+                    } else {
+                        // なにもしないでもう一度地点を変える
+                        continue;
+                    }
                     break;
                 }   
         }
-        if (i == 20) {
+        if (i == 10) {
             break;
         }
-        i++;
+        
         //puts("堀ループ");
     }
     
+    puts("マップ作成完了");
+    //sleep(2);
     
 
 
@@ -588,8 +640,7 @@ void makeMap() {
         "AAAAAAAAAA",
     };*/
 
-    puts("マップ作成完了");
-    sleep(2);
+    
 }
 
 //  num番のPNG画像を座標(x,y)に表示する
