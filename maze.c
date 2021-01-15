@@ -49,6 +49,7 @@ GLuint img_enemy2; // unsigned int 識別番号
 pngInfo info_enemy2; // 構造体 画像の細かい情報(表16.1)
 
 int gameflag = 0;
+int mapflag = 0; // 1になったらマップ生成済み
 
 #define MAPWIDTH 12
 #define MAPHEIGHT 11
@@ -291,11 +292,15 @@ void Display(void) {
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (gameflag == 1) {
+    if (mapflag == 0) {
         makeMap();
+    }
+
+    if (gameflag == 1) {
+        mapflag = 0;
         gameflag++;
     }
-    makeMap();
+    //makeMap();
 
     for (i = 0; i < MAPHEIGHT; i++) {
         for (j = 0; j < MAPWIDTH - 1; j++) {
@@ -312,7 +317,7 @@ void Display(void) {
 
     PutSprite(img_character, characterX, characterY, &info_character);
 
-    if (characterX == 256 && characterY == 256) {
+    if (characterX == 288 && characterY == 288) {
         clear();
     }
 
@@ -320,6 +325,7 @@ void Display(void) {
     PutSprite(img_enemy2, enemy2X, enemy2Y, &info_enemy2);
 
     glFlush();
+    //sleep(200);
 }
 
 
@@ -434,26 +440,31 @@ void makeMap() {
     int y = 0;
     int direction = 10; // 方向以外の数字
     int r;
-    int up, down, left, right;
-    up = 0;
-    down = 0;
-    left = 0;
-    right = 0;
+    //int up, down, left, right;
+    int end = 0;
+    //up = 0;
+    //down = 0;
+    //left = 0;
+    //right = 0;
 
-    int beforeX[MAPWIDTH];
-    int beforeY[MAPHEIGHT];
+    int beforeX[MAPWIDTH * MAPHEIGHT];
+    int beforeY[MAPWIDTH * MAPHEIGHT];
 
-    for (i = 0; i < MAPWIDTH; i++) {
+    for (i = 0; i < MAPWIDTH * MAPHEIGHT; i++) {
         beforeX[i] = 0;
     }
 
-    for (i = 0; i < MAPHEIGHT; i++) {
+    for (i = 0; i < MAPWIDTH * MAPHEIGHT; i++) {
         beforeY[i] = 0;
     }
 
     // キャラクターの初期位置
     characterX = 32;
     characterY = 32;
+    //enemy1X = 256;
+    //enemy1Y = 32;
+    //enemy2X = 256;
+    //enemy2Y = 256;
 
     // すべてを壁として初期化
     for (i = 0; i <= MAPHEIGHT; i++) {
@@ -478,6 +489,7 @@ void makeMap() {
     printf("x:%d, y:%d\n", x, y);
 
     i = 0;
+    j = 1;
     while (1) {
         r = rand() % 4; // 0～3の乱数生成
 
@@ -501,6 +513,7 @@ void makeMap() {
         // 決めた向きで掘れるかどうか確認
         switch (direction) {
             case UP:
+                puts("上に掘ることを試みる");
                 // 掘れる
                 if (y - 2 > 0 && map[y - 2][x] == WALL) {
                     // 掘る
@@ -509,101 +522,572 @@ void makeMap() {
                     map[y - 2][x] = ROAD;
                     beforeX[i] = x;
                     beforeY[i] = y;
+                    printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                    printf("x:%d, y:%d\n", x, y);
                     y -= 2;
                     i++;
                     puts("上");
+                    printf("x:%d, y:%d\n", x, y);
                     break;
                 } else {
-                    if (i != 0) {
-                        x = beforeX[i];
-                        y = beforeY[i];
-                    } else {
-                        // なにもしないでもう一度地点を変える
-                        continue;
+                    // まず現在地で他に掘れる方向がないか見る
+                    if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) { // 下
+                        map[y][x] = ROAD;
+                        map[y + 1][x] = ROAD;
+                        map[y + 2][x] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        y += 2;
+                        i++;
+                        puts("別の方向で下");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else if (x - 2 > 0 && map[y][x - 2] == WALL) { // 左
+                        map[y][x] = ROAD;
+                        map[y][x - 1] = ROAD;
+                        map[y][x - 2] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        x -= 2;
+                        i++;
+                        puts("別の方向で左");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
+                        map[y][x] = ROAD;
+                        map[y][x + 1] = ROAD;
+                        map[y][x + 2] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        x += 2;
+                        i++;
+                        puts("別の方向で右");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else { // ない
+                        // 戻って掘れる場所があるか探す
+                        j = 1;
+                        if (i != 0) {
+                            while (1) {
+                                puts("もどります");
+                                printf("i:%d j:%d\n", i, j);
+                                if (i - j < 0) { // おわり
+                                    end = 1;
+                                    break;
+                                }// else if (i - j - 1 < 0) { // 配列外にアクセスしてしまうので
+                                    //break;
+                                //}
+                                x = beforeX[i - j];
+                                y = beforeY[i - j];
+                                printf("before x:%d, y:%d\n", x, y);
+
+                                // 掘れる方向を探す
+                                if (y - 2 > 0 && map[y - 2][x] == WALL) { // 上
+                                    map[y][x] = ROAD;
+                                    map[y - 1][x] = ROAD;
+                                    map[y - 2][x] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    y -= 2;
+                                    i++;
+                                    puts("上");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) { // 下
+                                    map[y][x] = ROAD;
+                                    map[y + 1][x] = ROAD;
+                                    map[y + 2][x] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    y += 2;
+                                    i++;
+                                    puts("下");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (x - 2 > 0 && map[y][x - 2] == WALL) { // 左
+                                    map[y][x] = ROAD;
+                                    map[y][x - 1] = ROAD;
+                                    map[y][x - 2] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    x -= 2;
+                                    i++;
+                                    puts("左");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
+                                    map[y][x] = ROAD;
+                                    map[y][x + 1] = ROAD;
+                                    map[y][x + 2] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    x += 2;
+                                    i++;
+                                    puts("右");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else { // ない
+                                    j++;
+                                }
+                            }
+                        } else { // はじめましてのとき、これなんないかも
+                            puts("不運");
+                            // なにもしないでもう一度地点を変える
+                            while (1) {
+                                r = rand() % (MAPHEIGHT - 2) + 1; // 配列の添字で1から9の範囲の乱数生成
+                                if (r % 2 == 1 && x == 0) { // 偶数(配列の添字は奇数)
+                                    /* -1した値が配列で指定する際の座標 */
+                                    x = r;
+                                } else if (r % 2 == 1 && x != 0) {
+                                    y = r;
+                                    break;
+                                }
+                                
+                                //sleep(1);
+                            }
+                        }
                     }
                     
                     break;
                 }
             case DOWN:
+                puts("下に掘ることを試みる");
                 if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) {
                     map[y][x] = ROAD;
                     map[y + 1][x] = ROAD;
                     map[y + 2][x] = ROAD;
                     beforeX[i] = x;
                     beforeY[i] = y;
+                    printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                    printf("x:%d, y:%d\n", x, y);
                     y += 2;
                     i++;
                     puts("下");
+                    printf("x:%d, y:%d\n", x, y);
                     break;
                 } else {
-                    if (i != 0) {
-                        x = beforeX[i];
-                        y = beforeY[i];
-                    } else {
-                        // なにもしないでもう一度地点を変える
-                        continue;
+                    // まず現在地で他に掘れる方向がないか見る
+                    if (y - 2 > 0 && map[y - 2][x] == WALL) { // 上
+                        map[y][x] = ROAD;
+                        map[y - 1][x] = ROAD;
+                        map[y - 2][x] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        y -= 2;
+                        i++;
+                        puts("別の方向で上");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else if (x - 2 > 0 && map[y][x - 2] == WALL) { // 左
+                        map[y][x] = ROAD;
+                        map[y][x - 1] = ROAD;
+                        map[y][x - 2] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        x -= 2;
+                        i++;
+                        puts("別の方向で左");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
+                        map[y][x] = ROAD;
+                        map[y][x + 1] = ROAD;
+                        map[y][x + 2] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        x += 2;
+                        i++;
+                        puts("別の方向で右");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else { // ない
+                        j = 1;
+                        if (i != 0) {
+                            while (1) {
+                                puts("もどります");
+                                printf("i:%d j:%d\n", i, j);
+                                if (i - j < 0) { // おわり
+                                    end = 1;
+                                    break;
+                                }// else if (i - j - 1 < 0) { // 配列外にアクセスしてしまうので
+                                  //  break;
+                                //}
+                                
+                                x = beforeX[i - j];
+                                y = beforeY[i - j];
+                                printf("before x:%d, y:%d\n", x, y);
+
+                                // 掘れる方向を探す
+                                if (y - 2 > 0 && map[y - 2][x] == WALL) { // 上
+                                    map[y][x] = ROAD;
+                                    map[y - 1][x] = ROAD;
+                                    map[y - 2][x] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    y -= 2;
+                                    i++;
+                                    puts("上");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) { // 下
+                                    map[y][x] = ROAD;
+                                    map[y + 1][x] = ROAD;
+                                    map[y + 2][x] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    y += 2;
+                                    i++;
+                                    puts("下");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (x - 2 > 0 && map[y][x - 2] == WALL) { // 左
+                                    map[y][x] = ROAD;
+                                    map[y][x - 1] = ROAD;
+                                    map[y][x - 2] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    x -= 2;
+                                    i++;
+                                    puts("左");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
+                                    map[y][x] = ROAD;
+                                    map[y][x + 1] = ROAD;
+                                    map[y][x + 2] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    x += 2;
+                                    i++;
+                                    puts("右");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else { // ない
+                                    j++;
+                                }
+                            }
+                        } else {
+                            // なにもしないでもう一度地点を変える
+                            puts("不運");
+                            while (1) {
+                                r = rand() % (MAPHEIGHT - 2) + 1; // 配列の添字で1から9の範囲の乱数生成
+                                if (r % 2 == 1 && x == 0) { // 偶数(配列の添字は奇数)
+                                    /* -1した値が配列で指定する際の座標 */
+                                    x = r;
+                                } else if (r % 2 == 1 && x != 0) {
+                                    y = r;
+                                    break;
+                                }
+                                
+                                //sleep(1);
+                            }
+                        }
                     }
                     break;
                 }
             case LEFT:
+                puts("左に掘ることを試みる");
                 if (x - 2 > 0 && map[y][x - 2] == WALL) {
                     map[y][x] = ROAD;
                     map[y][x - 1] = ROAD;
                     map[y][x - 2] = ROAD;
                     beforeX[i] = x;
                     beforeY[i] = y;
+                    printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                    printf("x:%d, y:%d\n", x, y);
                     x -= 2;
                     i++;
                     puts("左");
+                    printf("x:%d, y:%d\n", x, y);
                     break;
                 } else {
-                    if (i != 0) {
-                        x = beforeX[i];
-                        y = beforeY[i];
-                    } else {
-                        // なにもしないでもう一度地点を変える
-                        continue;
+                    // まず現在地で他に掘れる方向がないか見る
+                    if (y - 2 > 0 && map[y - 2][x] == WALL) { // 上
+                        map[y][x] = ROAD;
+                        map[y - 1][x] = ROAD;
+                        map[y - 2][x] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        y -= 2;
+                        i++;
+                        puts("別の方向で上");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) { // 下
+                        map[y][x] = ROAD;
+                        map[y + 1][x] = ROAD;
+                        map[y + 2][x] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        y += 2;
+                        i++;
+                        puts("別の方向で下");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
+                        map[y][x] = ROAD;
+                        map[y][x + 1] = ROAD;
+                        map[y][x + 2] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        x += 2;
+                        i++;
+                        puts("別の方向で右");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else { // ない
+                        j = 1;
+                        if (i != 0) {
+                            while (1) {
+                                puts("もどります");
+                                printf("i:%d j:%d\n", i, j);
+                                if (i - j < 0) { // おわり
+                                    end = 1;
+                                    break;
+                                }// else if (i - j - 1 < 0) { // 配列外にアクセスしてしまうので
+                                   // break;
+                                //}
+                                x = beforeX[i - j];
+                                y = beforeY[i - j];
+                                printf("before x:%d, y:%d\n", x, y);
+
+                                // 掘れる方向を探す
+                                if (y - 2 > 0 && map[y - 2][x] == WALL) { // 上
+                                    map[y][x] = ROAD;
+                                    map[y - 1][x] = ROAD;
+                                    map[y - 2][x] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    y -= 2;
+                                    i++;
+                                    puts("上");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) { // 下
+                                    map[y][x] = ROAD;
+                                    map[y + 1][x] = ROAD;
+                                    map[y + 2][x] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    y += 2;
+                                    i++;
+                                    puts("下");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (x - 2 > 0 && map[y][x - 2] == WALL) { // 左
+                                    map[y][x] = ROAD;
+                                    map[y][x - 1] = ROAD;
+                                    map[y][x - 2] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    x -= 2;
+                                    i++;
+                                    puts("左");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
+                                    map[y][x] = ROAD;
+                                    map[y][x + 1] = ROAD;
+                                    map[y][x + 2] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    x += 2;
+                                    i++;
+                                    puts("右");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else { // ない
+                                    j++;
+                                }
+                            }
+                        } else {
+                            // なにもしないでもう一度地点を変える
+                            puts("不運");
+                            while (1) {
+                                r = rand() % (MAPHEIGHT - 2) + 1; // 配列の添字で1から9の範囲の乱数生成
+                                if (r % 2 == 1 && x == 0) { // 偶数(配列の添字は奇数)
+                                    /* -1した値が配列で指定する際の座標 */
+                                    x = r;
+                                } else if (r % 2 == 1 && x != 0) {
+                                    y = r;
+                                    break;
+                                }
+                                
+                                //sleep(1);
+                            }
+                        }
                     }
                     break;
                 }
             case RIGHT: 
+                puts("右に掘ることを試みる");
                 if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
                     map[y][x] = ROAD;
                     map[y][x + 1] = ROAD;
                     map[y][x + 2] = ROAD;
                     beforeX[i] = x;
                     beforeY[i] = y;
+                    printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                    printf("x:%d, y:%d\n", x, y);
                     x += 2;
                     i++;
                     puts("右");
+                    printf("x:%d, y:%d\n", x, y);
                     break;
                 } else {
-                    if (i != 0) {
-                        x = beforeX[i];
-                        y = beforeY[i];
-                    } else {
-                        // なにもしないでもう一度地点を変える
-                        continue;
+                    // まず現在地で他に掘れる方向がないか見る
+                    if (y - 2 > 0 && map[y - 2][x] == WALL) { // 上
+                        map[y][x] = ROAD;
+                        map[y - 1][x] = ROAD;
+                        map[y - 2][x] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        y -= 2;
+                        i++;
+                        puts("別の方向で上");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) { // 下
+                        map[y][x] = ROAD;
+                        map[y + 1][x] = ROAD;
+                        map[y + 2][x] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        y += 2;
+                        i++;
+                        puts("別の方向で下");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else if (x - 2 > 0 && map[y][x - 2] == WALL) { // 左
+                        map[y][x] = ROAD;
+                        map[y][x - 1] = ROAD;
+                        map[y][x - 2] = ROAD;
+                        beforeX[i] = x;
+                        beforeY[i] = y;
+                        printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
+                        printf("x:%d, y:%d\n", x, y);
+                        x -= 2;
+                        i++;
+                        puts("別の方向で左");
+                        printf("x:%d, y:%d\n", x, y);
+                        break;
+                    } else { // ない
+                        j = 1;
+                        if (i != 0) {
+                            while (1) {
+                                puts("もどります");
+                                printf("i:%d j:%d\n", i, j);
+                                if (i - j < 0) { // おわり
+                                    end = 1;
+                                    break;
+                                }// else if (i - j - 1 < 0) { // 配列外にアクセスしてしまうので
+                                   // break;
+                                //}
+                                x = beforeX[i - j];
+                                y = beforeY[i - j];
+                                printf("before x:%d, y:%d\n", x, y);
+
+                                // 掘れる方向を探す
+                                if (y - 2 > 0 && map[y - 2][x] == WALL) { // 上
+                                    map[y][x] = ROAD;
+                                    map[y - 1][x] = ROAD;
+                                    map[y - 2][x] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    y -= 2;
+                                    i++;
+                                    puts("上");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) { // 下
+                                    map[y][x] = ROAD;
+                                    map[y + 1][x] = ROAD;
+                                    map[y + 2][x] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    y += 2;
+                                    i++;
+                                    puts("下");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (x - 2 > 0 && map[y][x - 2] == WALL) { // 左
+                                    map[y][x] = ROAD;
+                                    map[y][x - 1] = ROAD;
+                                    map[y][x - 2] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    x -= 2;
+                                    i++;
+                                    puts("左");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
+                                    map[y][x] = ROAD;
+                                    map[y][x + 1] = ROAD;
+                                    map[y][x + 2] = ROAD;
+                                    beforeX[i] = x;
+                                    beforeY[i] = y;
+                                    x += 2;
+                                    i++;
+                                    puts("右");
+                                    printf("x:%d, y:%d\n", x, y);
+                                    break;
+                                } else { // ない
+                                    j++;
+                                }
+                            }
+                        } else {
+                            // なにもしないでもう一度地点を変える
+                            puts("不運");
+                            while (1) {
+                                r = rand() % (MAPHEIGHT - 2) + 1; // 配列の添字で1から9の範囲の乱数生成
+                                if (r % 2 == 1 && x == 0) { // 偶数(配列の添字は奇数)
+                                    /* -1した値が配列で指定する際の座標 */
+                                    x = r;
+                                } else if (r % 2 == 1 && x != 0) {
+                                    y = r;
+                                    break;
+                                }
+                                
+                                //sleep(1);
+                            }
+                        }
                     }
                     break;
                 }   
         }
-        if (i == 10) {
+        if (end == 1) {
             break;
         }
-        
+
         //puts("堀ループ");
     }
     
     puts("マップ作成完了");
-    //sleep(2);
-    
-
-
-
-
-
-
+    printf("\n");
+    mapflag++;
 
     //enemy1X = 256;
     //enemy1Y = 32;
