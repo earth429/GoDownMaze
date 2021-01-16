@@ -17,6 +17,11 @@
 #define LEFT 3
 #define RIGHT 1
 
+#define GOALX 288
+#define GOALY 288
+
+#define PARTSIZE 32
+
 void Display(void);
 void Reshape(int, int);
 void Timer(int);
@@ -33,8 +38,10 @@ void digLeft(int *, int *, int *, int[], int[], int[][MAPWIDTH]);
 void digRight(int *, int *, int *, int[], int[], int[][MAPWIDTH]);
 void backFind(int, int, int *, int *, int [], int [], int [][MAPWIDTH], int *);
 void makeMap();
-void putKey();
-void putLock();
+void randomXY(int *, int *, int *);
+void PrintText(int, int, char *);
+void PrintColorText(int, int, char *, int, int, int);
+void PrintShadowedText(int, int, char *, int, int, int);
 void PutSprite(int, int, int, pngInfo *);
 
 
@@ -100,14 +107,13 @@ int map[MAPHEIGHT][MAPWIDTH] = {};
 
 int main(int argc, char **argv) {
     //  一般的な準備
-    srandom(12345);
     glutInit(&argc, argv);
-    glutInitWindowSize((MAPWIDTH - 1) * 32, MAPHEIGHT * 32); //320
+    glutInitWindowSize((MAPWIDTH - 1) * PARTSIZE, MAPHEIGHT * PARTSIZE); //320
     glutCreateWindow("GoDownMaze");
     glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA);
-    glClearColor(0.0, 0.0, 1.0, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
 
-    // 乱数用
+    // 乱数初期化
     srand(time(NULL));
 
     //  テクスチャのアルファチャネルを有効にする設定
@@ -116,9 +122,7 @@ int main(int argc, char **argv) {
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
     //  PNG画像の読み込み
-
     imgMapA = pngBind("./png/mapparts1.png", PNG_NOMIPMAP, PNG_ALPHA, &infoMapA, GL_CLAMP, GL_NEAREST, GL_NEAREST);
-
     imgMapB = pngBind("./png/mapparts2.png", PNG_NOMIPMAP, PNG_ALPHA, &infoMapB, GL_CLAMP, GL_NEAREST, GL_NEAREST);
 
     imgCharacterUp = pngBind("./png/characterUp.png", PNG_NOMIPMAP, PNG_ALPHA, &infoCharacterUp, GL_CLAMP, GL_NEAREST, GL_NEAREST);
@@ -126,9 +130,8 @@ int main(int argc, char **argv) {
     imgCharacterLeft = pngBind("./png/characterLeft.png", PNG_NOMIPMAP, PNG_ALPHA, &infoCharacterLeft, GL_CLAMP, GL_NEAREST, GL_NEAREST);
     imgCharacterRight = pngBind("./png/characterRight.png", PNG_NOMIPMAP, PNG_ALPHA, &infoCharacterRight, GL_CLAMP, GL_NEAREST, GL_NEAREST);
 
-    imgEnemy1 = pngBind("./png/enemy1.png", PNG_NOMIPMAP, PNG_ALPHA, &infoEnemy1, GL_CLAMP, GL_NEAREST, GL_NEAREST);
-
-    imgEnemy2 = pngBind("./png/enemy2.png", PNG_NOMIPMAP, PNG_ALPHA, &infoEnemy2, GL_CLAMP, GL_NEAREST, GL_NEAREST);
+    //imgEnemy1 = pngBind("./png/enemy1.png", PNG_NOMIPMAP, PNG_ALPHA, &infoEnemy1, GL_CLAMP, GL_NEAREST, GL_NEAREST);
+    //imgEnemy2 = pngBind("./png/enemy2.png", PNG_NOMIPMAP, PNG_ALPHA, &infoEnemy2, GL_CLAMP, GL_NEAREST, GL_NEAREST);
 
     imgGoal = pngBind("./png/goal.png", PNG_NOMIPMAP, PNG_ALPHA, &infoGoal, GL_CLAMP, GL_NEAREST, GL_NEAREST);
 
@@ -140,8 +143,8 @@ int main(int argc, char **argv) {
     glutDisplayFunc(Display);
     glutReshapeFunc(Reshape);
     glutTimerFunc(100, Timer, 0);
-    glutTimerFunc(100, EnemyTimer1, 0);
-    glutTimerFunc(100, EnemyTimer2, 0);
+    //glutTimerFunc(100, EnemyTimer1, 0);
+    //glutTimerFunc(100, EnemyTimer2, 0);
     glutKeyboardFunc(Keyboard);
     glutSpecialFunc(SpecialKey);
 
@@ -195,7 +198,7 @@ void Timer(int t) {
 }
 
 //  タイマー割り込みで画面を描画し直す(敵1用)
-void EnemyTimer1(int t) {   
+/*void EnemyTimer1(int t) {   
     int r;
     r = rand() % 10;
     //printf("r:%d\n", r);
@@ -219,7 +222,7 @@ void EnemyTimer1(int t) {
 
     
     // 当たり判定
-    if ((abs(characterX - enemy1X) < 32) && (abs(characterY - enemy1Y) < 32)) {
+    if ((abs(characterX - enemy1X) < PARTSIZE) && (abs(characterY - enemy1Y) < PARTSIZE)) {
         //double startTime, endTime;
         //double totalTime = 0.0;
         //double setTime = 3.0;
@@ -255,15 +258,15 @@ void EnemyTimer1(int t) {
 
             endTime = clock() / CLOCKS_PER_SEC;
             totalTime = endTime - startTime;
-        }*/
+        }
     }
 
     glutPostRedisplay();
     glutTimerFunc(100, EnemyTimer1, 0);
-}
+}*/
 
 //  タイマー割り込みで画面を描画し直す(敵2用)
-void EnemyTimer2(int t) {
+/*void EnemyTimer2(int t) {
     int r;
     r = rand() % 10;
     //printf("r:%d\n", r);
@@ -286,7 +289,7 @@ void EnemyTimer2(int t) {
     }
     
     // 当たり判定
-    if ((abs(characterX - enemy2X) < 32) && (abs(characterY - enemy2Y) < 32)) {
+    if ((abs(characterX - enemy2X) < PARTSIZE) && (abs(characterY - enemy2Y) < PARTSIZE)) {
         puts("enemy2:Hit");
         life--;
         printf("life:%d", life);
@@ -299,7 +302,7 @@ void EnemyTimer2(int t) {
     
     glutPostRedisplay();
     glutTimerFunc(100, EnemyTimer2, 0);
-}
+}*/
 
 
 //  ウィンドウのサイズ変更が発生したときに座標系を再設定する関数
@@ -320,84 +323,89 @@ void Display(void) {
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (mapflag == 0) {
-        makeMap();
-    }
+    if (characterX == GOALX && characterY == GOALY && putlockflag != 0) {
+        clear();
+    } else {
+        if (mapflag == 0) {
+            makeMap();
+        }
 
-    if (gameflag == 1) {
-        mapflag = 0;
-        keyflag = 0;
-        putkeyflag = 0;
-        lockflag = 0;
-        putlockflag = 0;
-        gameflag++;
-    }
-    //makeMap();
+        if (gameflag == 1) {
+            mapflag = 0;
+            keyflag = 0;
+            putkeyflag = 0;
+            lockflag = 0;
+            putlockflag = 0;
+            gameflag++;
+        }
+        //makeMap();
 
-    for (i = 0; i < MAPHEIGHT; i++) {
-        for (j = 0; j < MAPWIDTH - 1; j++) {
-            x = 32 * j;
-            y = 32 * i;
-            if (map[i][j] == WALL) {
-                PutSprite(imgMapA, x, y, &infoMapA);
-            } else if(map[i][j] == ROAD){
-                PutSprite(imgMapB, x, y, &infoMapB);
+        for (i = 0; i < MAPHEIGHT; i++) {
+            for (j = 0; j < MAPWIDTH - 1; j++) {
+                x = PARTSIZE * j;
+                y = PARTSIZE * i;
+                if (map[i][j] == WALL) {
+                    PutSprite(imgMapA, x, y, &infoMapA);
+                } else if(map[i][j] == ROAD){
+                    PutSprite(imgMapB, x, y, &infoMapB);
+                }
             }
+        }
+
+        if (putlockflag != 0) {
+            PutSprite(imgGoal, GOALX, GOALY, &infoGoal);
+        }
+        
+        
+
+        switch (characterDirection) {
+            case UP:
+                PutSprite(imgCharacterUp, characterX, characterY, &infoCharacterUp);
+                break;
+            case DOWN:
+                PutSprite(imgCharacterDown, characterX, characterY, &infoCharacterDown);
+                break;
+            case LEFT:
+                PutSprite(imgCharacterLeft, characterX, characterY, &infoCharacterLeft);
+                break;
+            case RIGHT:
+                PutSprite(imgCharacterRight, characterX, characterY, &infoCharacterRight);
+                break;
+        }
+        
+
+        PutSprite(imgEnemy1, enemy1X, enemy1Y, &infoEnemy1);
+        PutSprite(imgEnemy2, enemy2X, enemy2Y, &infoEnemy2);
+        if (keyflag == 0) {
+            randomXY(&keyX, &keyY, &keyflag);
+            //putKey();
+        }
+
+        if ((abs(characterX - keyX) < PARTSIZE) && (abs(characterY - keyY) < PARTSIZE)) {
+            //puts("かぎ:Hit");
+            putkeyflag = 1;
+        }
+
+        if (putkeyflag == 0) {
+            PutSprite(imgKey, keyX, keyY, &infoKey);
+        }
+
+        if (lockflag == 0) {
+            randomXY(&lockX, &lockY, &lockflag);
+            //putLock();
+        }
+
+        if ((abs(characterX - lockX) < PARTSIZE) && (abs(characterY - lockY) < PARTSIZE) && putkeyflag != 0) {
+            //puts("lock:Hit");
+            putlockflag = 1;
+        }
+
+        if (putlockflag == 0) {
+            PutSprite(imgLock, lockX, lockY, &infoLock);
         }
     }
 
-    if (putlockflag != 0) {
-        PutSprite(imgGoal, 288, 288, &infoGoal);
-    }
-    if (characterX == 288 && characterY == 288) {
-        clear();
-    }
     
-
-    switch (characterDirection) {
-        case UP:
-            PutSprite(imgCharacterUp, characterX, characterY, &infoCharacterUp);
-            break;
-        case DOWN:
-            PutSprite(imgCharacterDown, characterX, characterY, &infoCharacterDown);
-            break;
-        case LEFT:
-            PutSprite(imgCharacterLeft, characterX, characterY, &infoCharacterLeft);
-            break;
-        case RIGHT:
-            PutSprite(imgCharacterRight, characterX, characterY, &infoCharacterRight);
-            break;
-    }
-    
-
-    PutSprite(imgEnemy1, enemy1X, enemy1Y, &infoEnemy1);
-    PutSprite(imgEnemy2, enemy2X, enemy2Y, &infoEnemy2);
-    if (keyflag == 0) {
-        putKey();
-    }
-
-    if ((abs(characterX - keyX) < 32) && (abs(characterY - keyY) < 32)) {
-        puts("かぎ:Hit");
-        putkeyflag++;
-    }
-
-    if (putkeyflag == 0) {
-        PutSprite(imgKey, keyX, keyY, &infoKey);
-    }
-
-    if (lockflag == 0) {
-        putLock();
-    }
-
-    if ((abs(characterX - lockX) < 32) && (abs(characterY - lockY) < 32) && putkeyflag != 0) {
-        puts("lock:Hit");
-        putlockflag++;
-    }
-
-    if (putlockflag == 0) {
-        PutSprite(imgLock, lockX, lockY, &infoLock);
-    }
-    //putKey();
     
 
     glFlush();
@@ -445,9 +453,9 @@ int isMovable(int x, int y, int direction) {
     int cx, cy;
     switch (direction) {
         case 0:
-            cx = x / 32;
-            cy = (y - 1) / 32;
-            if (x % 32 == 0) { // キャラクターがマップパーツとぴったり重なる
+            cx = x / PARTSIZE;
+            cy = (y - 1) / PARTSIZE;
+            if (x % PARTSIZE == 0) { // キャラクターがマップパーツとぴったり重なる
                 if (map[cy][cx] == WALL) { // Aは壁
                     return 0;
                 }
@@ -458,9 +466,9 @@ int isMovable(int x, int y, int direction) {
             }
             break;
         case 1:
-            cx = x / 32;
-            cy = y / 32;
-            if (y % 32 == 0) { // キャラクターがマップパーツとぴったり重なる
+            cx = x / PARTSIZE;
+            cy = y / PARTSIZE;
+            if (y % PARTSIZE == 0) { // キャラクターがマップパーツとぴったり重なる
                 if (map[cy][cx + 1] == WALL) { // Aは壁
                     return 0;
                 }
@@ -471,9 +479,9 @@ int isMovable(int x, int y, int direction) {
             }
             break;
         case 2:
-            cx = x / 32;
-            cy = y / 32;
-            if (x % 32 == 0) { // キャラクターがマップパーツとぴったり重なる
+            cx = x / PARTSIZE;
+            cy = y / PARTSIZE;
+            if (x % PARTSIZE == 0) { // キャラクターがマップパーツとぴったり重なる
                 if (map[cy + 1][cx] == WALL) { // Aは壁
                     return 0;
                 }
@@ -484,9 +492,9 @@ int isMovable(int x, int y, int direction) {
             }
             break;
         case 3:
-            cx = (x - 1) / 32;
-            cy = y / 32;
-            if (y % 32 == 0) { // キャラクターがマップパーツとぴったり重なる
+            cx = (x - 1) / PARTSIZE;
+            cy = y / PARTSIZE;
+            if (y % PARTSIZE == 0) { // キャラクターがマップパーツとぴったり重なる
                 if (map[cy][cx] == WALL) { // Aは壁
                     return 0;
                 }
@@ -504,13 +512,14 @@ int isMovable(int x, int y, int direction) {
 }
 
 void clear() {
-    //puts("aho");
-    //int i;
-    puts("クリア");
+    //puts("クリア");
+    int wdiv10 = MAPWIDTH / 10;
+    int wdiv100 = wdiv10 / 10;
+    PrintShadowedText(32 * wdiv10 * 4 + wdiv100 * 90, 32 * MAPHEIGHT / 2, "CLEAR", 255, 255, 255);
+    PrintShadowedText(32 * wdiv10 * 1 + wdiv100 * 90, 32 * MAPHEIGHT / 10 * 6, "Press q or Esc key to exit", 255, 255, 255);
     gameflag++;
 
     //exit(0);
-    //puts("ahoaho");
 }
 
 void digUp(int *i, int *x, int *y, int beforeX[], int beforeY[], int map[][MAPWIDTH]) {
@@ -801,38 +810,46 @@ void makeMap() {
     
 }
 
-// 鍵を置く
-void putKey() {
+// ランダムにXY座標を決める
+void randomXY(int *x, int *y, int *flag) {
     int r;
 
     while (1) {
         r = rand() % MAPHEIGHT; // 0～10の乱数生成
-        //printf("r:%d, map:%d\n", r, map[r][r]);
 
-        if (r != 1 && r != 9 && map[r][r] == ROAD) {
-            keyX = r * 32;
-            keyY = r * 32;
-            keyflag++;
+        if (r != 1 && r != 9 && map[r][r] == ROAD && keyX != r * PARTSIZE) {
+            *x = r * PARTSIZE;
+            *y = r * PARTSIZE;
+            *flag = 1;
             break;
         }
     }
 }
 
-// 錠を置く
-void putLock() {
-    int r;
+// 指定した座標に文字を描画
+void PrintText(int x, int y, char *str) {
+    int i;
 
-    while (1) {
-        r = rand() % MAPHEIGHT; // 0～10の乱数生成
-        //printf("r:%d, map:%d\n", r, map[r][r]);
-
-        if (r != 1 && r != 9 && keyX != r * 32 && map[r][r] == ROAD) {
-            lockX = r * 32;
-            lockY = r * 32;
-            lockflag++;
-            break;
-        }
+    glRasterPos2i(x, y);
+    for (i = 0; i <= strlen(str); i++) {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, str[i]);
     }
+}
+
+// 指定した色で文字を描画
+void PrintColorText(int x, int y, char *str, int r, int g, int b) {
+    glColor3ub(r, g, b);
+    PrintText(x, y, str);
+}
+
+// 影付きで文字を描画
+void PrintShadowedText(int x, int y, char *str, int r, int g, int b) {
+    // 影を描画
+    PrintColorText(x + 2, y + 2, str, 77, 77, 77);
+    PrintColorText(x + 1, y + 1, str, 77, 77, 77);
+    // 太文字で文字を描画
+    PrintColorText(x, y, str, r, g, b);
+    PrintColorText(x - 1, y, str, r, g, b);
 }
 
 //  num番のPNG画像を座標(x,y)に表示する
