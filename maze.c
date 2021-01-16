@@ -185,8 +185,6 @@ void characterMove(int *x, int *y, int direction) {
             *x += 8;
         }
         break;
-    default: // なにもしない
-        break;
     }
 }
 
@@ -356,26 +354,8 @@ void Display(void) {
             PutSprite(imgGoal, GOALX, GOALY, &infoGoal);
         }
         
-        
-
-        switch (characterDirection) {
-            case UP:
-                PutSprite(imgCharacterUp, characterX, characterY, &infoCharacterUp);
-                break;
-            case DOWN:
-                PutSprite(imgCharacterDown, characterX, characterY, &infoCharacterDown);
-                break;
-            case LEFT:
-                PutSprite(imgCharacterLeft, characterX, characterY, &infoCharacterLeft);
-                break;
-            case RIGHT:
-                PutSprite(imgCharacterRight, characterX, characterY, &infoCharacterRight);
-                break;
-        }
-        
-
-        PutSprite(imgEnemy1, enemy1X, enemy1Y, &infoEnemy1);
-        PutSprite(imgEnemy2, enemy2X, enemy2Y, &infoEnemy2);
+        //PutSprite(imgEnemy1, enemy1X, enemy1Y, &infoEnemy1);
+        //PutSprite(imgEnemy2, enemy2X, enemy2Y, &infoEnemy2);
         if (keyflag == 0) {
             randomXY(&keyX, &keyY, &keyflag);
             //putKey();
@@ -405,7 +385,20 @@ void Display(void) {
         }
     }
 
-    
+    switch (characterDirection) {
+        case UP:
+            PutSprite(imgCharacterUp, characterX, characterY, &infoCharacterUp);
+            break;
+        case DOWN:
+            PutSprite(imgCharacterDown, characterX, characterY, &infoCharacterDown);
+            break;
+        case LEFT:
+            PutSprite(imgCharacterLeft, characterX, characterY, &infoCharacterLeft);
+            break;
+        case RIGHT:
+            PutSprite(imgCharacterRight, characterX, characterY, &infoCharacterRight);
+            break;
+    }
     
 
     glFlush();
@@ -441,8 +434,6 @@ void SpecialKey(int key, int x, int y) {
         characterDirection = RIGHT;
         characterMove(&characterX, &characterY, RIGHT);
         break;
-    default:
-        break;
     }
 
     glutPostRedisplay(); // ディスプレイを更新
@@ -452,7 +443,7 @@ void SpecialKey(int key, int x, int y) {
 int isMovable(int x, int y, int direction) {
     int cx, cy;
     switch (direction) {
-        case 0:
+        case UP:
             cx = x / PARTSIZE;
             cy = (y - 1) / PARTSIZE;
             if (x % PARTSIZE == 0) { // キャラクターがマップパーツとぴったり重なる
@@ -465,7 +456,7 @@ int isMovable(int x, int y, int direction) {
                 }
             }
             break;
-        case 1:
+        case RIGHT:
             cx = x / PARTSIZE;
             cy = y / PARTSIZE;
             if (y % PARTSIZE == 0) { // キャラクターがマップパーツとぴったり重なる
@@ -478,7 +469,7 @@ int isMovable(int x, int y, int direction) {
                 }
             }
             break;
-        case 2:
+        case DOWN:
             cx = x / PARTSIZE;
             cy = y / PARTSIZE;
             if (x % PARTSIZE == 0) { // キャラクターがマップパーツとぴったり重なる
@@ -491,7 +482,7 @@ int isMovable(int x, int y, int direction) {
                 }
             }
             break;
-        case 3:
+        case LEFT:
             cx = (x - 1) / PARTSIZE;
             cy = y / PARTSIZE;
             if (y % PARTSIZE == 0) { // キャラクターがマップパーツとぴったり重なる
@@ -503,9 +494,6 @@ int isMovable(int x, int y, int direction) {
                     return 0;
                 }
             }
-            break;
-        default:
-            // とくになし
             break;
     }
     return 1;
