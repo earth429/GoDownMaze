@@ -26,6 +26,7 @@
 
 void Display(void);
 void Reshape(int, int);
+void Timer(int);
 void Keyboard(unsigned char, int, int);
 void SpecialKey(int, int, int);
 int isMovable(int, int, int);
@@ -123,6 +124,7 @@ int main(int argc, char **argv) {
     //  コールバック関数の登録
     glutDisplayFunc(Display);
     glutReshapeFunc(Reshape);
+    glutTimerFunc(100, Timer, 0);
     glutKeyboardFunc(Keyboard);
     glutSpecialFunc(SpecialKey);
 
@@ -214,6 +216,12 @@ void Reshape(int w, int h) {
     gluOrtho2D(0, w, 0, h);
     glScaled(1, -1, 1);
     glTranslated(0, -h, 0);
+}
+
+//  タイマー割り込みで画面を描画し直す
+void Timer(int t) {
+    glutPostRedisplay();
+    glutTimerFunc(100, Timer, 0);
 }
 
 // キー入力の処理
