@@ -26,9 +26,6 @@
 
 void Display(void);
 void Reshape(int, int);
-//void Timer(int);
-//void EnemyTimer1(int);
-//void EnemyTimer2(int);
 void Keyboard(unsigned char, int, int);
 void SpecialKey(int, int, int);
 int isMovable(int, int, int);
@@ -67,13 +64,6 @@ pngInfo infoCharacterRight;
 int characterX = 32;
 int characterY = 32;
 int characterDirection = DOWN;
-//int life = 50;
-
-// 敵
-//int enemy1X = 256;
-//int enemy1Y = 32;
-//int enemy2X = 256;
-//int enemy2Y = 256;
 
 // ゴール
 GLuint imgGoal;
@@ -89,15 +79,7 @@ GLuint imgLock;
 pngInfo infoLock;
 int lockX, lockY;
 
-
-// 敵
-//GLuint imgEnemy1; // unsigned int 識別番号
-//pngInfo infoEnemy1; // 構造体 画像の細かい情報(表16.1)
-//GLuint imgEnemy2; // unsigned int 識別番号
-//pngInfo infoEnemy2; // 構造体 画像の細かい情報(表16.1)
-
 // 状態を管理するフラグたち
-//int gameflag = 0; // ゲームをクリアしたか
 int mapflag = 0; // マップ生成済みか
 int keyflag = 0; // 鍵設置済みか
 int getkeyflag = 0; // 鍵取得済みか
@@ -105,7 +87,6 @@ int lockflag = 0; // 錠設置済みか
 int getlockflag = 0; // 錠取得済みか
 int clearflag = 0; // ゲームをクリアしたか
 
-// p169
 // 迷路の内容を格納する二次元配列
 int map[MAPHEIGHT][MAPWIDTH] = {};
 
@@ -135,9 +116,6 @@ int main(int argc, char **argv) {
     imgCharacterLeft = pngBind("./png/characterLeft.png", PNG_NOMIPMAP, PNG_ALPHA, &infoCharacterLeft, GL_CLAMP, GL_NEAREST, GL_NEAREST);
     imgCharacterRight = pngBind("./png/characterRight.png", PNG_NOMIPMAP, PNG_ALPHA, &infoCharacterRight, GL_CLAMP, GL_NEAREST, GL_NEAREST);
 
-    //imgEnemy1 = pngBind("./png/enemy1.png", PNG_NOMIPMAP, PNG_ALPHA, &infoEnemy1, GL_CLAMP, GL_NEAREST, GL_NEAREST);
-    //imgEnemy2 = pngBind("./png/enemy2.png", PNG_NOMIPMAP, PNG_ALPHA, &infoEnemy2, GL_CLAMP, GL_NEAREST, GL_NEAREST);
-
     imgGoal = pngBind("./png/goal.png", PNG_NOMIPMAP, PNG_ALPHA, &infoGoal, GL_CLAMP, GL_NEAREST, GL_NEAREST);
     imgKey = pngBind("./png/key.png", PNG_NOMIPMAP, PNG_ALPHA, &infoKey, GL_CLAMP, GL_NEAREST, GL_NEAREST);
     imgLock = pngBind("./png/lock.png", PNG_NOMIPMAP, PNG_ALPHA, &infoLock, GL_CLAMP, GL_NEAREST, GL_NEAREST);
@@ -145,9 +123,6 @@ int main(int argc, char **argv) {
     //  コールバック関数の登録
     glutDisplayFunc(Display);
     glutReshapeFunc(Reshape);
-    //glutTimerFunc(100, Timer, 0);
-    //glutTimerFunc(100, EnemyTimer1, 0);
-    //glutTimerFunc(100, EnemyTimer2, 0);
     glutKeyboardFunc(Keyboard);
     glutSpecialFunc(SpecialKey);
 
@@ -167,21 +142,10 @@ void Display(void) {
         clearflag = 1;
     } else if (clearflag == 1) {
         clear();
-        // なにもしない
     } else {
         if (mapflag == 0) {
             makeMap();
         }
-
-        /*if (gameflag == 1) {
-            mapflag = 0;
-            keyflag = 0;
-            getkeyflag = 0;
-            lockflag = 0;
-            getlockflag = 0;
-            gameflag++;
-        }*/
-        //makeMap();
 
         for (i = 0; i < MAPHEIGHT; i++) {
             for (j = 0; j < MAPWIDTH - 1; j++) {
@@ -199,15 +163,11 @@ void Display(void) {
             PutSprite(imgGoal, GOALX, GOALY, &infoGoal);
         }
         
-        //PutSprite(imgEnemy1, enemy1X, enemy1Y, &infoEnemy1);
-        //PutSprite(imgEnemy2, enemy2X, enemy2Y, &infoEnemy2);
         if (keyflag == 0) {
             randomXY(&keyX, &keyY, &keyflag);
-            //putKey();
         }
 
         if ((abs(characterX - keyX) < PARTSIZE) && (abs(characterY - keyY) < PARTSIZE)) {
-            //puts("かぎ:Hit");
             getkeyflag = 1;
         }
 
@@ -217,11 +177,9 @@ void Display(void) {
 
         if (lockflag == 0) {
             randomXY(&lockX, &lockY, &lockflag);
-            //putLock();
         }
 
         if ((abs(characterX - lockX) < PARTSIZE) && (abs(characterY - lockY) < PARTSIZE) && getkeyflag != 0) {
-            //puts("lock:Hit");
             getlockflag = 1;
         }
 
@@ -245,125 +203,8 @@ void Display(void) {
             break;
     }
     
-
     glFlush();
-    //sleep(200);
 }
-
-
-//  タイマー割り込みで画面を描画し直す
-/*void Timer(int t) {
-    glutPostRedisplay();
-    glutTimerFunc(100, Timer, 0);
-}*/
-
-//  タイマー割り込みで画面を描画し直す(敵1用)
-/*void EnemyTimer1(int t) {   
-    int r;
-    r = rand() % 10;
-    //printf("r:%d\n", r);
-    
-    switch (r) {
-        case 0: // 上
-            characterMove(&enemy1X, &enemy1Y, UP);
-            break;
-        case 1: // 下
-            characterMove(&enemy1X, &enemy1Y, DOWN);
-            break;
-        case 2: // 左
-            characterMove(&enemy1X, &enemy1Y, LEFT);
-            break;
-        case 3: // 右
-            characterMove(&enemy1X, &enemy1Y, RIGHT);
-            break;
-        default:
-            break;
-    }
-
-    
-    // 当たり判定
-    if ((abs(characterX - enemy1X) < PARTSIZE) && (abs(characterY - enemy1Y) < PARTSIZE)) {
-        //double startTime, endTime;
-        //double totalTime = 0.0;
-        //double setTime = 3.0;
-
-        puts("enemy1:Hit");
-        life--;
-        printf("life:%d", life);
-        if (life <= 0) {
-            puts("ゲームオーバー");
-            exit(0);
-        }
-
-        time_t last = time(0);
-        time_t next;
-        int pastSec = 0;
-
-        while(1) {
-        if (time(&next) != last) { 
-            last = next;
-            pastSec++;
-            printf("%d 秒経過\n", pastSec);
-            if (pastSec == 3) {
-                break;
-            }
-        }
-        }
-        startTime = clock() / CLOCKS_PER_SEC;
-
-        while(1) {
-            if (totalTime > setTime) {
-                break;
-            }
-
-            endTime = clock() / CLOCKS_PER_SEC;
-            totalTime = endTime - startTime;
-        }
-    }
-
-    glutPostRedisplay();
-    glutTimerFunc(100, EnemyTimer1, 0);
-}*/
-
-//  タイマー割り込みで画面を描画し直す(敵2用)
-/*void EnemyTimer2(int t) {
-    int r;
-    r = rand() % 10;
-    //printf("r:%d\n", r);
-    
-    switch (r) {
-        case 0: // 上
-            characterMove(&enemy2X, &enemy2Y, UP);
-            break;
-        case 1: // 下
-            characterMove(&enemy2X, &enemy2Y, DOWN);
-            break;
-        case 2: // 左
-            characterMove(&enemy2X, &enemy2Y, LEFT);
-            break;
-        case 3: // 右
-            characterMove(&enemy2X, &enemy2Y, RIGHT);
-            break;
-        default:
-            break;
-    }
-    
-    // 当たり判定
-    if ((abs(characterX - enemy2X) < PARTSIZE) && (abs(characterY - enemy2Y) < PARTSIZE)) {
-        puts("enemy2:Hit");
-        life--;
-        printf("life:%d", life);
-        if (life <= 0) {
-            puts("ゲームオーバー");
-            exit(0);
-        }
-
-    }
-    
-    glutPostRedisplay();
-    glutTimerFunc(100, EnemyTimer2, 0);
-}*/
-
 
 //  ウィンドウのサイズ変更が発生したときに座標系を再設定する関数
 void Reshape(int w, int h) {
@@ -375,10 +216,6 @@ void Reshape(int w, int h) {
     glTranslated(0, -h, 0);
 }
 
-
-
-
-
 // キー入力の処理
 void Keyboard(unsigned char key, int x, int y) {
     if ((key == 'q') || (key == 27)) {
@@ -387,7 +224,6 @@ void Keyboard(unsigned char key, int x, int y) {
     }
 }
 
-// p165 特殊キー
 // direction 上=0,右=1,下=2,左=3
 void SpecialKey(int key, int x, int y) {
     switch (key) {
@@ -505,6 +341,7 @@ void characterMove(int *x, int *y, int direction) {
     }
 }
 
+// 上に穴を掘る
 void digUp(int *i, int *x, int *y, int beforeX[], int beforeY[], int map[][MAPWIDTH]) {
     // 掘る
     map[*y][*x] = ROAD;
@@ -512,68 +349,54 @@ void digUp(int *i, int *x, int *y, int beforeX[], int beforeY[], int map[][MAPWI
     map[*y - 2][*x] = ROAD;
     beforeX[*i] = *x;
     beforeY[*i] = *y;
-    ////printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
-    //printf("x:%d, y:%d\n", x, y);
     *y -= 2;
     *i += 1;
-    //puts("上");
-    //printf("x:%d, y:%d\n", x, y);
 }
 
+// 下に穴を掘る
 void digDown(int *i, int *x, int *y, int beforeX[], int beforeY[], int map[][MAPWIDTH]) {
     map[*y][*x] = ROAD;
     map[*y + 1][*x] = ROAD;
     map[*y + 2][*x] = ROAD;
     beforeX[*i] = *x;
     beforeY[*i] = *y;
-    //printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
-    //printf("x:%d, y:%d\n", x, y);
     *y += 2;
     *i += 1;
-    //puts("別の方向で下");
-    //printf("x:%d, y:%d\n", x, y);
 }
 
+// 左に穴を掘る
 void digLeft(int *i, int *x, int *y, int beforeX[], int beforeY[], int map[][MAPWIDTH]) {
     map[*y][*x] = ROAD;
     map[*y][*x - 1] = ROAD;
     map[*y][*x - 2] = ROAD;
     beforeX[*i] = *x;
     beforeY[*i] = *y;
-    //printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
-    //printf("x:%d, y:%d\n", x, y);
     *x -= 2;
     *i += 1;
-    //puts("別の方向で左");
-    //printf("x:%d, y:%d\n", x, y);
 }
 
+// 右に穴を掘る
 void digRight(int *i, int *x, int *y, int beforeX[], int beforeY[], int map[][MAPWIDTH]) {
     map[*y][*x] = ROAD;
     map[*y][*x + 1] = ROAD;
     map[*y][*x + 2] = ROAD;
     beforeX[*i] = *x;
     beforeY[*i] = *y;
-    //printf("配列チェック x:%d, y:%d\n", beforeX[i], beforeY[i]);
-    //printf("x:%d, y:%d\n", x, y);
     *x += 2;
     *i += 1;
-    //puts("別の方向で右");
-    //printf("x:%d, y:%d\n", x, y);
 }
 
+// 前の座標に戻って掘れる方向がないか探す
 void backFind(int i, int j, int *x, int *y, int beforeX[], int beforeY[], int map[][MAPWIDTH], int *end) {
     while (1) {
-        //puts("もどります");
-        //printf("i:%d j:%d\n", i, j);
-        if (i - j < 0) { // おわり
+        if (i - j < 0) { // マップ作成完了なので終了
             *end = 1;
             break;
         }
 
+        // ひとつ前の座標を読み込む
         *x = beforeX[i - j];
         *y = beforeY[i - j];
-        //printf("before x:%d, y:%d\n", *x, *y);
 
         // 掘れる方向を探す
         if (*y - 2 > 0 && map[*y - 2][*x] == WALL) { // 上
@@ -585,7 +408,7 @@ void backFind(int i, int j, int *x, int *y, int beforeX[], int beforeY[], int ma
         } else if (*x - 2 > 0 && map[*y][*x - 2] == WALL) { // 左
             digLeft(&i, x, y, beforeX, beforeY, map);
             break;
-        } else if (*x + 2 < MAPWIDTH - 2 && map[*y][*x + 2] == WALL) {
+        } else if (*x + 2 < MAPWIDTH - 2 && map[*y][*x + 2] == WALL) { // 右
             digRight(&i, x, y, beforeX, beforeY, map);
             break;
         } else { // 掘れない
@@ -617,10 +440,6 @@ void makeMap() {
     // キャラクターの初期位置
     characterX = 32;
     characterY = 32;
-    //enemy1X = 256;
-    //enemy1Y = 32;
-    //enemy2X = 256;
-    //enemy2Y = 256;
 
     // すべてを壁として初期化
     for (i = 0; i <= MAPHEIGHT; i++) {
@@ -639,10 +458,7 @@ void makeMap() {
             y = r;
             break;
         }
-        
-        //sleep(1);
     }
-    //printf("x:%d, y:%d\n", x, y);
 
     i = 0;
     while (1) {
@@ -667,23 +483,21 @@ void makeMap() {
 
         // 決めた向きで掘れるかどうか確認
         switch (direction) {
-            case UP:
-                //puts("上に掘ることを試みる");
+            case UP: // 上
                 // 掘れる
                 if (y - 2 > 0 && map[y - 2][x] == WALL) {
                     // 掘る
                     digUp(&i, &x, &y, beforeX, beforeY, map);
                     break;
-                } else { // 決めた方向では掘れなかった
+                } else { // 現在地で決めた方向では掘れなかった
                     // まず現在地で他に掘れる方向がないか見る
-                    //puts("現在地でさがす");
                     if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) { // 下
                         digDown(&i, &x, &y, beforeX, beforeY, map);
                         break;
                     } else if (x - 2 > 0 && map[y][x - 2] == WALL) { // 左
                         digLeft(&i, &x, &y, beforeX, beforeY, map);
                         break;
-                    } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
+                    } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) { // 右
                         digRight(&i, &x, &y, beforeX, beforeY, map);
                         break;
                     } else { // 現在地では掘れない
@@ -693,21 +507,20 @@ void makeMap() {
                         break;
                     }
                 }
-            case DOWN:
-                //puts("下に掘ることを試みる");
+            case DOWN: // 下
+                // 掘れる
                 if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) {
                     digDown(&i, &x, &y, beforeX, beforeY, map);
                     break;
-                } else {
+                } else { // 現在地で決めた方向では掘れなかった
                     // まず現在地で他に掘れる方向がないか見る
-                    //puts("現在地でさがす");
                     if (y - 2 > 0 && map[y - 2][x] == WALL) { // 上
                         digUp(&i, &x, &y, beforeX, beforeY, map);
                         break;
                     } else if (x - 2 > 0 && map[y][x - 2] == WALL) { // 左
                         digLeft(&i, &x, &y, beforeX, beforeY, map);
                         break;
-                    } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
+                    } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) { // 右
                         digRight(&i, &x, &y, beforeX, beforeY, map);
                         break;
                     } else { // 現在地では掘れない
@@ -716,21 +529,19 @@ void makeMap() {
                         break;
                     }
                 }
-            case LEFT:
-                //puts("左に掘ることを試みる");
+            case LEFT: // 左
                 if (x - 2 > 0 && map[y][x - 2] == WALL) {
                     digLeft(&i, &x, &y, beforeX, beforeY, map);
                     break;
-                } else {
+                } else { // 現在地で決めた方向では掘れなかった
                     // まず現在地で他に掘れる方向がないか見る
-                    //puts("現在地でさがす");
                     if (y - 2 > 0 && map[y - 2][x] == WALL) { // 上
                         digUp(&i, &x, &y, beforeX, beforeY, map);
                         break;
                     } else if (y + 2 < MAPHEIGHT - 1 && map[y + 2][x] == WALL) { // 下
                         digDown(&i, &x, &y, beforeX, beforeY, map);
                         break;
-                    } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
+                    } else if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) { // 右
                         digRight(&i, &x, &y, beforeX, beforeY, map);
                         break;
                     } else { // 現在地では掘れない
@@ -739,14 +550,12 @@ void makeMap() {
                         break;
                     }
                 }
-            case RIGHT: 
-                //puts("右に掘ることを試みる");
+            case RIGHT: // 右
                 if (x + 2 < MAPWIDTH - 2 && map[y][x + 2] == WALL) {
                     digRight(&i, &x, &y, beforeX, beforeY, map);
                     break;
-                } else {
+                } else {  // 現在地で決めた方向では掘れなかった
                     // まず現在地で他に掘れる方向がないか見る
-                    //puts("現在地でさがす");
                     if (y - 2 > 0 && map[y - 2][x] == WALL) { // 上
                         digUp(&i, &x, &y, beforeX, beforeY, map);
                         break;
@@ -764,33 +573,13 @@ void makeMap() {
                 }   
         }
 
-
-        if (end == 1) {
+        if (end == 1) { // マップ生成完了
             break;
         }
-
-        //puts("堀ループ");
     }
     
     puts("マップ作成完了");
-    printf("\n");
-    mapflag++;
-
-
-    /*map[10][11] = {
-        "AAAAAAAAAA",
-        "ABBBBBBBBA",
-        "ABBBAABBBA",
-        "ABBBBBBBBA",
-        "ABBBAAAAAA",
-        "ABABBBBBBA",
-        "AAABBAABBA",
-        "ABBBBAAABA",
-        "ABBBBBBBBA",
-        "AAAAAAAAAA",
-    };*/
-
-    
+    mapflag = 1;    
 }
 
 // ランダムにXY座標を決める
@@ -827,7 +616,7 @@ void PrintColorText(int x, int y, char *str, int r, int g, int b) {
 
 // 影付きで文字を描画
 void PrintShadowedText(int x, int y, char *str, int r, int g, int b) {
-    // 影を描画
+    // 影を描画(黒い画面に書くことを想定)
     PrintColorText(x + 2, y + 2, str, 77, 77, 77);
     PrintColorText(x + 1, y + 1, str, 77, 77, 77);
     // 太文字で文字を描画
@@ -837,7 +626,6 @@ void PrintShadowedText(int x, int y, char *str, int r, int g, int b) {
 
 // クリア画面を生成
 void clear() {
-    //puts("クリア");
     int wdiv10 = MAPWIDTH / 10;
     int wdiv100 = wdiv10 / 10;
     int i, j;
@@ -850,25 +638,9 @@ void clear() {
             }
         }
     }
-        /*map[MAPHEIGHT][MAPWIDTH] = {
-            "11111111111",
-            "10000000001",
-            "10000000001",
-            "10000000001",
-            "10000000001",
-            "10000000001",
-            "10000000001",
-            "10000000001",
-            "10000000001",
-            "10000000001",
-            "11111111111",
-        };*/
+
     PrintShadowedText(32 * wdiv10 * 4 + wdiv100 * 90, 32 * MAPHEIGHT / 2, "CLEAR", 255, 255, 255);
     PrintShadowedText(32 * wdiv10 * 1 + wdiv100 * 90, 32 * MAPHEIGHT / 10 * 6, "Press q or Esc key to exit", 255, 255, 255);
-    
-    //gameflag++;
-
-    //exit(0);
 }
 
 //  num番のPNG画像を座標(x,y)に表示する
