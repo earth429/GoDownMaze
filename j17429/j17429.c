@@ -626,7 +626,7 @@ void PrintShadowedText(int x, int y, char *str, int r, int g, int b) {
 
 // クリア画面を生成
 void clear() {
-    int wdiv10 = MAPWIDTH / 10;
+    int wdiv10 = (MAPWIDTH - 1) * PARTSIZE / 10;
     int wdiv100 = wdiv10 / 10;
     int i, j;
     for (i = 0; i < MAPHEIGHT; i++) {
@@ -639,8 +639,8 @@ void clear() {
         }
     }
 
-    PrintShadowedText(32 * wdiv10 * 4 + wdiv100 * 90, 32 * MAPHEIGHT / 2, "CLEAR", 255, 255, 255);
-    PrintShadowedText(32 * wdiv10 * 1 + wdiv100 * 90, 32 * MAPHEIGHT / 10 * 6, "Press q or Esc key to exit", 255, 255, 255);
+    PrintShadowedText(wdiv10 * 4, 32 * MAPHEIGHT / 2, "CLEAR", 255, 255, 255);
+    PrintShadowedText(wdiv10 * 1 + wdiv100 * 6, 32 * MAPHEIGHT / 10 * 6, "Press q or Esc key to exit", 255, 255, 255);
 }
 
 //  num番のPNG画像を座標(x,y)に表示する
