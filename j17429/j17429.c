@@ -1,3 +1,5 @@
+// 17429 430 松澤大地
+
 #include <GL/glut.h>
 #include <GL/glpng.h>
 #include <stdio.h>
@@ -322,30 +324,30 @@ void characterMove(int *x, int *y, int direction) {
     int return_val;
 
     switch (direction) {
-    case UP: // 上へ進む
-        return_val = isMovable(*x, *y, UP);
-        if (return_val) { // return_valが1のとき実行
-            *y -= 8;
-        }
-        break;
-    case DOWN: // 下へ
-        return_val = isMovable(*x, *y, DOWN);
-        if (return_val) {
-            *y += 8;
-        }
-        break;
-    case LEFT: // 左へ
-        return_val = isMovable(*x, *y, LEFT);
-        if (return_val) {
-            *x -= 8;
-        }
-        break;
-    case RIGHT: // 右へ
-        return_val = isMovable(*x, *y, RIGHT);
-        if (return_val) {
-            *x += 8;
-        }
-        break;
+        case UP: // 上へ進む
+            return_val = isMovable(*x, *y, UP);
+            if (return_val) { // return_valが1のとき実行
+                *y -= 8;
+            }
+            break;
+        case DOWN: // 下へ
+            return_val = isMovable(*x, *y, DOWN);
+            if (return_val) {
+                *y += 8;
+            }
+            break;
+        case LEFT: // 左へ
+            return_val = isMovable(*x, *y, LEFT);
+            if (return_val) {
+                *x -= 8;
+            }
+            break;
+        case RIGHT: // 右へ
+            return_val = isMovable(*x, *y, RIGHT);
+            if (return_val) {
+                *x += 8;
+            }
+            break;
     }
 }
 
